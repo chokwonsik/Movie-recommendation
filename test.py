@@ -32,7 +32,7 @@ rating_table = rating_data[['user_id', 'movie_id', 'rating']]\
 # SVD 라이브러리를 사용하기 위한 학습 데이터를 생성합니다.
 reader = Reader(rating_scale=(1, 5))
 data = Dataset.load_from_df(rating_data[['user_id', 'movie_id', 'rating']], reader)
-train_data, test_data = data.build_full_trainset()
+train_data, test_data = train_test_split(data, test_size=0.2)
 
 # SVD 모델을 학습합니다.
 train_start = time.time()
@@ -44,12 +44,12 @@ print("trainning time of model: %.2f seconds" % (train_end - train_start))
 predictions = model.test(test_data)
 
 # 테스트 데이터의 RMSE를 출력합니다.
-print("RMSE of test dataset in SVD model: ")
-accuracy.rmse((predictions))
+print("RMSE of test dataset in SVD model: ", accuracy.rmse((predictions)))
+
 
 
 # user_id가 4인 유저의 영화 평가 데이터입니다.
-target_user_id = 4
+target_user_id = 3
 target_user_data = rating_data[rating_data['user_id'] == target_user_id]
 
 # user_id 4인 유저가 평가한 영화 히스토리 정보를 추출합니다.
@@ -87,12 +87,12 @@ target_user_movie_predict_dict = get_user_predicted_ratings \
      user_id=target_user_id,
      user_history=target_user_movie_rating_dict)
 
-print("타겟 유저 예측 점수 : ",target_user_movie_predict_dict)
+print("타겟 유저 예측 점수 : ", target_user_movie_predict_dict)
 
 
 # target_user_movie_predict_dict 에서 예측된 점수 중 , 타겟 유저의 Top 10 영화를 선정합니다
-target_user_top10_predicted = sorted (target_user_movie_predict_dict.items (),
-                                      key= operator.itemgetter (1), reverse=True)[:10]
+target_user_top10_predicted = sorted (target_user_movie_predict_dict.items(),
+                                      key=operator.itemgetter(1), reverse=True)[:10]
 
 # 예측된 Top 10 영화
 print("예측된 Top 10 영화: ",target_user_top10_predicted)
@@ -110,7 +110,7 @@ for index, row in movie_data.iterrows():
 for predicted in target_user_top10_predicted:
     movie_id = predicted[0]
     predicted_rating = predicted[1]
-    print("타겟 관람x : ",movie_dict[movie_id], ":", predicted_rating)
+    print("타겟 관람x :", movie_dict[movie_id], ":", predicted_rating)
 
 
 # 타겟 사용자의 기존 선호 영화와 비교합니다.
@@ -119,10 +119,9 @@ target_user_top10_real = sorted(target_user_movie_rating_dict.items(),
 for real in target_user_top10_real:
     movie_id = real[0]
     real_Rating = real[1]
-    print("타겟 관람o :",movie_dict[movie_id],",",real_Rating)
+    print("타겟 관람o :", movie_dict[movie_id], ",", real_Rating)
 
-
-#예측 점수와 실제 점수를 영화 타이틀에 매핑합니다.
+# 예측 점수와 실제 점수를 영화 타이틀에 매핑합니다.
 origin_rating_list = []
 predicted_rating_list = []
 movie_title_list = []
@@ -132,9 +131,10 @@ for movie_id, predicted_rating in target_user_movie_predict_dict.items():
     predicted_rating = round(predicted_rating, 2)
     origin_rating = target_user_movie_rating_dict[movie_id]
     movie_title = movie_dict[movie_id]
-    print("movie", str(idx), ":", movie_title, "-", origin_rating, "/", predicted_rating)
-    origin_rating_list.append(predicted_rating)
-    movie_title_list.append(predicted_rating)
+
+    print("movie", str(idx), ":", movie_title, "-", "origin_rating", "/", predicted_rating)
+    origin_rating_list.append(origin_rating)
+    predicted_rating_list.append(predicted_rating)
     movie_title_list.append(str(idx))
 
 
@@ -148,4 +148,12 @@ index = np.arange(len(movie_title_list))
 bar_width = 0.2
 
 # 실제 점수와 예측 점수를 bar 그래프로 출력합니다.
-rects1 = plt.ba
+rects1 = plt.bar(index, origin ,bar_width,
+                 color='orange',
+                 label='Origin')
+rects2 = plt.bar(index + bar_width, predicted, bar_width,
+                 color='green',
+                 label='Predicted')
+plt.xticks(index, movie_title_list)
+plt.legend()
+plt.show()
