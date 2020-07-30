@@ -1,4 +1,5 @@
 # Movie-recommendation
 
-python
-Singular Value Decomposition
+python3
+
+SVD(Singular Value Decomposition)
